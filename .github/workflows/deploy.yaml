@@ -13,14 +13,25 @@ on:
         default: 'staging'
 
 jobs:
-  deploy:
+  deployment:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-    - name: Deploying application
+    - name: Get the latest tag
+      id: get_latest_tag
+      uses: actions-ecosystem/action-get-latest-tag@v1
+
+    - name: Get the version from acr
+      id: get_acr
       run: |
-        echo "Deployed"
+        echo "Get the image to acr"
+
+    - name: Deploy application
+      id: deploy_app
+      run: |
+        echo "Deploy application"
+
 
