@@ -1,0 +1,26 @@
+name: Deploy Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version'
+        required: true
+        default: 'latest'
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Deploying application
+      run: |
+        echo "Deployed"
+
