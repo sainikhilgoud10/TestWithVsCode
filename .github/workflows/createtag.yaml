@@ -1,0 +1,50 @@
+name: Create Semantic Version Tag
+
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  create_tag:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get the latest tag
+      id: get_latest_tag
+      uses: actions-ecosystem/action-get-latest-tag@v1
+
+    - name: Calculate new version
+      id: calc_version
+      run: |
+        if [ -z "${{ steps.get_latest_tag.outputs.tag }}" ]; then
+          echo "No tags found, setting initial tag to v0.1.0"
+          echo "::set-output name=NEW_VERSION::v0.1.0"
+        else
+          LATEST_TAG=${{ steps.get_latest_tag.outputs.tag }}
+          echo "Latest tag: $LATEST_TAG"
+          IFS='.' read -ra PARTS <<< "${LATEST_TAG#v}"
+          MAJOR=${PARTS[0]}
+          MINOR=${PARTS[1]}
+          PATCH=${PARTS[2]}
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+          echo "New version: $NEW_VERSION"
+          echo "::set-output name=NEW_VERSION::$NEW_VERSION"
+        fi
+
+    - name: Set up Git
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+
+    - name: Create and push new tag
+      run: |
+        git tag -a ${{ steps.calc_version.outputs.NEW_VERSION }} -m "Release ${{ steps.calc_version.outputs.NEW_VERSION }}"
+        git push origin ${{ steps.calc_version.outputs.NEW_VERSION }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

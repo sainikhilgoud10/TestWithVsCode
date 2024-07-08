@@ -1,50 +1,30 @@
-name: Create Semantic Version Tag
+name: Deploy on Tag
 
 on:
   push:
-    branches:
-    - main
-  workflow_dispatch:
+    tags:
+      - '*'
 
 jobs:
-  create_tag:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-    - name: Get the latest tag
-      id: get_latest_tag
-      uses: actions-ecosystem/action-get-latest-tag@v1
+    - name: Extract tag name
+      id: extract_tag
+      run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-    - name: Calculate new version
-      id: calc_version
+    - name: Run tests
       run: |
-        if [ -z "${{ steps.get_latest_tag.outputs.tag }}" ]; then
-          echo "No tags found, setting initial tag to v0.1.0"
-          echo "::set-output name=NEW_VERSION::v0.1.0"
-        else
-          LATEST_TAG=${{ steps.get_latest_tag.outputs.tag }}
-          echo "Latest tag: $LATEST_TAG"
-          IFS='.' read -ra PARTS <<< "${LATEST_TAG#v}"
-          MAJOR=${PARTS[0]}
-          MINOR=${PARTS[1]}
-          PATCH=${PARTS[2]}
-          PATCH=$((PATCH + 1))
-          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-          echo "New version: $NEW_VERSION"
-          echo "::set-output name=NEW_VERSION::$NEW_VERSION"
-        fi
+        echo "Running tests"
 
-    - name: Set up Git
+     - name: Build docker image
       run: |
-        git config --global user.name 'github-actions'
-        git config --global user.email 'github-actions@github.com'
-
-    - name: Create and push new tag
+        echo "Building docker image"
+    
+    - name: Deploy to dev
       run: |
-        git tag -a ${{ steps.calc_version.outputs.NEW_VERSION }} -m "Release ${{ steps.calc_version.outputs.NEW_VERSION }}"
-        git push origin ${{ steps.calc_version.outputs.NEW_VERSION }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        echo "deploy to dev"
